@@ -781,40 +781,64 @@
   fetchData();
   // ========== ULTRA HIGH RESOLUTION IMAGE GENERATION (NOW 3840px WIDE — TRUE 4K) ==========
   async function getHighResImageBlob() {
-    const captureElement = document.getElementById('captureArea');
-    if (!captureElement) throw new Error("Capture area missing");
-    // Store original styles so we can restore them
-    const originalWidth = captureElement.style.width;
-    const originalMaxWidth = captureElement.style.maxWidth;
-    const originalBackground = captureElement.style.background;
-    try {
-      // Force design width (540px) for consistent layout during capture
-      captureElement.style.width = '540px';
-      captureElement.style.maxWidth = '540px';
-      captureElement.style.background = 'transparent';
-      // Dynamic scale → always produces ~3840px wide output (true 4K high-res, no matter device/screen size)
-      const rect = captureElement.getBoundingClientRect();
-      const logicalWidth = rect.width || 540;
-      const targetWidth = 3840;                    // ← INCREASED FROM 2160 TO 3840 FOR MUCH HIGHER RESOLUTION
-      const scale = Math.max(4, targetWidth / logicalWidth); // minimum 4×, usually ~7×
-      const canvas = await html2canvas(captureElement, {
-        scale: scale,
-        backgroundColor: '#fef9ef',
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        letterRendering: true,
-        windowWidth: captureElement.scrollWidth,
-        windowHeight: captureElement.scrollHeight
-      });
-      return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    } finally {
-      // Restore original styles
-      captureElement.style.width = originalWidth || '';
-      captureElement.style.maxWidth = originalMaxWidth || '';
-      captureElement.style.background = originalBackground || '';
-    }
+  const captureElement = document.getElementById('captureArea');
+  if (!captureElement) throw new Error("Capture area missing");
+
+  // Save original styles
+  const originalWidth = captureElement.style.width;
+  const originalMaxWidth = captureElement.style.maxWidth;
+  const originalTransform = captureElement.style.transform;
+
+  try {
+    // Force consistent layout
+    captureElement.style.width = '540px';
+    captureElement.style.maxWidth = '540px';
+    captureElement.style.transform = 'scale(1)';
+
+    const rect = captureElement.getBoundingClientRect();
+    const logicalWidth = rect.width || 540;
+
+    // Detect mobile
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+    // Safe target widths
+    const targetWidth = isMobile ? 1400 : 2000;
+
+    // Safe scaling limits
+    const scale = Math.min(isMobile ? 2.5 : 3.5, targetWidth / logicalWidth);
+
+    const canvas = await html2canvas(captureElement, {
+      scale: scale,
+      backgroundColor: '#fef9ef',
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+
+      // CRITICAL FIXES (prevents blank / cut images)
+      width: captureElement.scrollWidth,
+      height: captureElement.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: document.documentElement.clientWidth,
+      windowHeight: document.documentElement.clientHeight
+    });
+
+    // Convert to compressed JPEG (mobile friendly)
+    return await new Promise(resolve => {
+      canvas.toBlob(
+        blob => resolve(blob),
+        'image/jpeg',   // 🔥 much better for sharing
+        0.92            // high quality but smaller size
+      );
+    });
+
+  } finally {
+    // Restore original styles
+    captureElement.style.width = originalWidth || '';
+    captureElement.style.maxWidth = originalMaxWidth || '';
+    captureElement.style.transform = originalTransform || '';
   }
+}
   // DOWNLOAD high-res (now true 4K)
   const downloadBtn = document.getElementById('downloadBtn');
   downloadBtn.addEventListener('click', async () => {
@@ -845,7 +869,7 @@
       const originalIcon = shareBtn.innerHTML;
       shareBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
       const blob = await getHighResImageBlob();
-      const file = new File([blob], `Faiz_Tiffin_Calendar_${currentMonth}_4K.png`, { type: 'image/png' });
+      const file = new File([blob], `Faiz_Tiffin_Calendar_${currentMonth}.jpg`, { type: 'image/png' });
       if (navigator.share) {
         await navigator.share({
           title: 'Faiz ul Mawaid Tiffin Menu',
