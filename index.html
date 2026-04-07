@@ -3,7 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-  <title>Faiz ul Mawaid | Chattogram</title>
+  <title>Faiz ul Mawaid | Chattogram - Tiffin Menu</title>
+  
+  <!-- Open Graph / Social Media Meta Tags (for link preview image) -->
+  <meta property="og:title" content="Faiz ul Mawaid | Chattogram - Daily Tiffin Menu" />
+  <meta property="og:description" content="Authentic Tiffin Service in Chattogram. View today's special menu and tiffin rules." />
+  <meta property="og:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://faiz-ul-mawaid-chattogram.vercel.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Faiz ul Mawaid | Chattogram - Tiffin Menu" />
+  <meta name="twitter:description" content="Authentic Tiffin Service in Chattogram. Daily specials, tiffin rules & more." />
+  <meta name="twitter:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
+  
+  <!-- Favicon (optional but clean) -->
+  <link rel="icon" type="image/png" href="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <!-- html2canvas for high-res capture -->
@@ -681,7 +698,7 @@
     <div class="footer"><i class="fas fa-database"></i> Faiz ul Mawaid Chattogram | Developed By Mohammed Paghdiwala</div>
   </div>
 </div>
-<!-- TOP RIGHT BUTTONS: DOWNLOAD + SHARE (clean share message) -->
+<!-- TOP RIGHT BUTTONS: DOWNLOAD + SHARE -->
 <div class="action-buttons">
   <button class="action-btn" id="downloadBtn" title="Save as Image"><i class="fas fa-download"></i></button>
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
@@ -779,67 +796,34 @@
     }
   }
   fetchData();
-  // ========== ULTRA HIGH RESOLUTION IMAGE GENERATION (NOW 3840px WIDE — TRUE 4K) ==========
+  // ========== HIGH RESOLUTION IMAGE GENERATION (SHARP & SCALABLE) ==========
   async function getHighResImageBlob() {
-  const captureElement = document.getElementById('captureArea');
-  if (!captureElement) throw new Error("Capture area missing");
-
-  // Save original styles
-  const originalWidth = captureElement.style.width;
-  const originalMaxWidth = captureElement.style.maxWidth;
-  const originalTransform = captureElement.style.transform;
-
-  try {
-    // Force consistent layout
-    captureElement.style.width = '540px';
-    captureElement.style.maxWidth = '540px';
-    captureElement.style.transform = 'scale(1)';
-
-    const rect = captureElement.getBoundingClientRect();
-    const logicalWidth = rect.width || 540;
-
-    // Detect mobile
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-
-    // Safe target widths
-    const targetWidth = isMobile ? 1400 : 2000;
-
-    // Safe scaling limits
-    const scale = Math.min(isMobile ? 2.5 : 3.5, targetWidth / logicalWidth);
-
-    const canvas = await html2canvas(captureElement, {
-      scale: scale,
-      backgroundColor: '#fef9ef',
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-
-      // CRITICAL FIXES (prevents blank / cut images)
-      width: captureElement.scrollWidth,
-      height: captureElement.scrollHeight,
-      scrollX: 0,
-      scrollY: 0,
-      windowWidth: document.documentElement.clientWidth,
-      windowHeight: document.documentElement.clientHeight
-    });
-
-    // Convert to compressed JPEG (mobile friendly)
-    return await new Promise(resolve => {
-      canvas.toBlob(
-        blob => resolve(blob),
-        'image/jpeg',   // 🔥 much better for sharing
-        0.92            // high quality but smaller size
-      );
-    });
-
-  } finally {
-    // Restore original styles
-    captureElement.style.width = originalWidth || '';
-    captureElement.style.maxWidth = originalMaxWidth || '';
-    captureElement.style.transform = originalTransform || '';
+    const captureElement = document.getElementById('captureArea');
+    if (!captureElement) throw new Error("Capture area missing");
+    const originalWidth = captureElement.style.width;
+    const originalMaxWidth = captureElement.style.maxWidth;
+    try {
+      captureElement.style.width = '540px';
+      captureElement.style.maxWidth = '540px';
+      const rect = captureElement.getBoundingClientRect();
+      const logicalWidth = rect.width || 540;
+      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+      const targetScale = isMobile ? 3.0 : 3.8;
+      const canvas = await html2canvas(captureElement, {
+        scale: Math.min(targetScale, 4.2),
+        backgroundColor: '#fef9ef',
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        width: captureElement.scrollWidth,
+        height: captureElement.scrollHeight
+      });
+      return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.92));
+    } finally {
+      captureElement.style.width = originalWidth || '';
+      captureElement.style.maxWidth = originalMaxWidth || '';
+    }
   }
-}
-  // DOWNLOAD high-res (now true 4K)
   const downloadBtn = document.getElementById('downloadBtn');
   downloadBtn.addEventListener('click', async () => {
     try {
@@ -850,7 +834,7 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       const timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
-      link.download = `Faiz_Tiffin_Calendar_${currentMonth}_${timestamp}_4K.png`;
+      link.download = `Faiz_Tiffin_Calendar_${currentMonth}_${timestamp}.jpg`;
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
@@ -861,7 +845,6 @@
       downloadBtn.style.pointerEvents = 'auto';
     }
   });
-  // SHARE high-res (now true 4K)
   const shareBtn = document.getElementById('shareBtn');
   shareBtn.addEventListener('click', async () => {
     try {
@@ -869,28 +852,21 @@
       const originalIcon = shareBtn.innerHTML;
       shareBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
       const blob = await getHighResImageBlob();
-      const file = new File([blob], `Faiz_Tiffin_Calendar_${currentMonth}.jpg`, { type: 'image/png' });
+      const file = new File([blob], `Faiz_Tiffin_Calendar_${currentMonth}.jpg`, { type: 'image/jpeg' });
       if (navigator.share) {
-        await navigator.share({
-          title: 'Faiz ul Mawaid Tiffin Menu',
-          text: '',
-          files: [file]
-        });
+        await navigator.share({ title: 'Faiz ul Mawaid Tiffin Menu', text: 'Daily tiffin menu from Chattogram', files: [file] });
       } else {
-        // fallback download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = `Faiz_Tiffin_Calendar_${currentMonth}_4K.png`;
+        link.download = `Faiz_Tiffin_Calendar_${currentMonth}.jpg`;
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
-        alert("Your browser doesn't support native sharing. True 4K image downloaded instead.");
+        alert("Your browser doesn't support native sharing. Image downloaded.");
       }
       shareBtn.innerHTML = originalIcon;
     } catch (err) {
-      if (err.name !== 'AbortError') {
-        alert("Sharing failed: " + (err.message || "Unknown error"));
-      }
+      if (err.name !== 'AbortError') alert("Sharing failed: " + (err.message || "Unknown error"));
     } finally {
       shareBtn.style.pointerEvents = 'auto';
     }
