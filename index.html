@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
   <title>Faiz ul Mawaid | Chattogram - Tiffin Menu</title>
   
-  <!-- Open Graph / Social Media Meta Tags -->
+  <!-- Open Graph / Social Media Meta Tags (for link preview image) -->
   <meta property="og:title" content="Faiz ul Mawaid | Chattogram - Daily Tiffin Menu" />
   <meta property="og:description" content="Authentic Tiffin Service in Chattogram. View today's special menu and tiffin rules." />
   <meta property="og:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
@@ -18,6 +19,7 @@
   <meta name="twitter:description" content="Authentic Tiffin Service in Chattogram. Daily specials, tiffin rules & more." />
   <meta name="twitter:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
   
+  <!-- Favicon (optional but clean) -->
   <link rel="icon" type="image/png" href="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -41,6 +43,7 @@
       justify-content: center;
       position: relative;
     }
+    /* main container */
     .app-wrapper {
       max-width: 540px;
       width: 100%;
@@ -50,6 +53,7 @@
       overflow: visible;
       position: relative;
     }
+    /* capture area — will be rendered at high resolution, but layout stays responsive */
     #captureArea {
       background: linear-gradient(145deg, #fef9ef 0%, #f9efdf 100%);
       border-radius: 1.5rem;
@@ -57,6 +61,7 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.05);
       transition: all 0.2s;
     }
+    /* Hero compact */
     .hero {
       position: relative;
       border-radius: 1.2rem;
@@ -110,6 +115,7 @@
       font-size: 0.6rem;
       font-weight: 500;
     }
+    /* 2x2 GRID */
     .menu-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -233,7 +239,14 @@
       color: #ffcd94;
       font-size: 0.6rem;
     }
-    /* action buttons */
+    .footer {
+      text-align: right;
+      margin-top: 0.6rem;
+      padding: 0.3rem 0.2rem;
+      font-size: 0.55rem;
+      color: #b4916a;
+    }
+    /* ----- TOP RIGHT ACTION BUTTONS (Download + Share) ----- */
     .action-buttons {
       position: fixed;
       top: 16px;
@@ -266,6 +279,20 @@
       font-size: 1.25rem;
       filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
     }
+    @media (max-width: 480px) {
+      .action-btn {
+        width: 38px;
+        height: 38px;
+      }
+      .action-btn i {
+        font-size: 1rem;
+      }
+      .action-buttons {
+        top: 12px;
+        right: 12px;
+        gap: 8px;
+      }
+    }
     .no-data {
       grid-column: span 2;
       text-align: center;
@@ -273,14 +300,6 @@
       background: white;
       border-radius: 1.2rem;
       color: #b6926e;
-    }
-    /* loader footer style */
-    .loader-footer {
-      margin-top: 20px;
-      font-size: 0.7rem;
-      color: #7a6b46;
-      text-align: center;
-      opacity: 0.8;
     }
     @media (max-width: 560px) {
       body { padding: 8px; }
@@ -620,6 +639,8 @@
       transition: all 0.4s ease;
       filter: blur(2px);
     }
+    .top-lock.locking ~ .shadow { transform: scale(1.05); animation: pulse 0.4s ease-in-out; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
     .sparkle {
       position: absolute;
       top: -25px;
@@ -657,8 +678,6 @@
       <div class="shadow"></div>
     </div>
   </div>
-  <!-- Footer moved to loading screen as requested -->
-  <div class="loader-footer"><i class="fas fa-database"></i> Faiz ul Mawaid Chattogram | Developed By Mohammed Paghdiwala</div>
 </div>
 <div class="app-wrapper">
   <div id="captureArea">
@@ -677,7 +696,7 @@
         <li><i class="fas fa-clock"></i> Please put your FMB Tiffin before 10:00 AM</li>
       </ul>
     </div>
-    <!-- Footer removed from capture area -->
+    <div class="footer"><i class="fas fa-database"></i> Faiz ul Mawaid Chattogram | Developed By Mohammed Paghdiwala</div>
   </div>
 </div>
 <!-- TOP RIGHT BUTTONS: DOWNLOAD + SHARE -->
@@ -686,293 +705,245 @@
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
 </div>
 <script>
-  (function(){
-    "use strict";
+  let dataLoaded = false;
 
-    // ---------- MENU DATA ----------
-    let dataLoaded = false;
-    const API_URL = "https://script.google.com/macros/s/AKfycbwV4-aCPrfq4TS95yvclE9IU5WU9QIAhtWIvYZSXA90sL7R7R8SwiA_GKSpcdmNphBB/exec";
-    let allMenuData = [];
-    let currentMonth = "";
-    let availableMonths = new Set();
-    const menuGrid = document.getElementById('menuGrid');
-    const CACHE_KEY = "tiffinMenuCache";
+  // ========== FETCH MENU DATA ==========
+  const API_URL = "https://script.google.com/macros/s/AKfycbwV4-aCPrfq4TS95yvclE9IU5WU9QIAhtWIvYZSXA90sL7R7R8SwiA_GKSpcdmNphBB/exec";
+  let allMenuData = [];
+  let currentMonth = "";
+  let availableMonths = new Set();
+  const menuGrid = document.getElementById('menuGrid');
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const CACHE_KEY = "tiffinMenuCache";
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  }
+
+  function getMenuItemStyle(entry) {
+    let style = "";
+    if (entry.color) style += `color: ${entry.color}; `;
+    if (entry.bgColor) style += `background-color: ${entry.bgColor}; `;
+    if (entry.fontWeight) style += `font-weight: ${entry.fontWeight}; `;
+    if (entry.fontStyle) style += `font-style: ${entry.fontStyle}; `;
+    if (entry.fontSize) style += `font-size: ${entry.fontSize}; `;
+    style += `padding: 4px; border-radius: 6px; display: block;`;
+    return style;
+  }
+
+  function renderMenu() {
+    let filtered = allMenuData.filter(item => item.month === currentMonth);
+    filtered.sort((a,b) => a.day - b.day);
+
+    if (filtered.length === 0) {
+      menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu available for ${escapeHtml(currentMonth)}.<br>Please check back later.</div>`;
+      return;
     }
 
-    function getMenuItemStyle(entry) {
-      let style = "";
-      if (entry.color) style += `color: ${entry.color}; `;
-      if (entry.bgColor) style += `background-color: ${entry.bgColor}; `;
-      if (entry.fontWeight) style += `font-weight: ${entry.fontWeight}; `;
-      if (entry.fontStyle) style += `font-style: ${entry.fontStyle}; `;
-      if (entry.fontSize) style += `font-size: ${entry.fontSize}; `;
-      style += `padding: 4px; border-radius: 6px; display: block;`;
-      return style;
-    }
+    let html = '';
+    for (const entry of filtered) {
+      const dayNumber = entry.day;
+      const weekdayName = entry.weekday ? escapeHtml(entry.weekday) : '—';
+      const monthDisplay = entry.month ? escapeHtml(entry.month) : escapeHtml(currentMonth);
+      const menuText = entry.menuItem ? escapeHtml(entry.menuItem) : "Traditional Tiffin Special";
+      const inlineStyle = getMenuItemStyle(entry);
 
-    function renderMenu() {
-      let filtered = allMenuData.filter(item => item.month === currentMonth);
-      filtered.sort((a,b) => a.day - b.day);
-
-      if (filtered.length === 0) {
-        menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu available for ${escapeHtml(currentMonth)}.<br>Please check back later.</div>`;
-        return;
-      }
-
-      let html = '';
-      for (const entry of filtered) {
-        const dayNumber = entry.day;
-        const weekdayName = entry.weekday ? escapeHtml(entry.weekday) : '—';
-        const monthDisplay = entry.month ? escapeHtml(entry.month) : escapeHtml(currentMonth);
-        const menuText = entry.menuItem ? escapeHtml(entry.menuItem) : "Traditional Tiffin Special";
-        const inlineStyle = getMenuItemStyle(entry);
-
-        html += `<div class="menu-card">
-          <div class="card-header">
-            <div class="day-name"><i class="fas fa-calendar-alt"></i><span>${weekdayName}</span></div>
-            <div style="display: flex; gap: 0.5rem; align-items: baseline;">
-              <span class="month-text">${monthDisplay}</span>
-              <span class="date-text">${dayNumber}</span>
-            </div>
+      html += `<div class="menu-card">
+        <div class="card-header">
+          <div class="day-name"><i class="fas fa-calendar-alt"></i><span>${weekdayName}</span></div>
+          <div style="display: flex; gap: 0.5rem; align-items: baseline;">
+            <span class="month-text">${monthDisplay}</span>
+            <span class="date-text">${dayNumber}</span>
           </div>
-          <div class="card-body">
-            <div class="menu-item" style="${inlineStyle}">${menuText}</div>
-          </div>
-        </div>`;
-      }
-
-      menuGrid.innerHTML = html;
+        </div>
+        <div class="card-body">
+          <div class="menu-item" style="${inlineStyle}">${menuText}</div>
+        </div>
+      </div>`;
     }
 
-    function loadFromCache() {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (!cached) return;
-        const parsed = JSON.parse(cached);
-        allMenuData = parsed.data || [];
-        currentMonth = parsed.month || "";
-        availableMonths = new Set(parsed.availableMonths || []);
-        if (allMenuData.length > 0) {
-          renderMenu();
-          dataLoaded = true;
-        }
-      } catch (e) {}
-    }
+    menuGrid.innerHTML = html;
+  }
 
-    async function fetchData() {
-      try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        if (data.success && data.menuData && data.menuData.length > 0) {
-          allMenuData = data.menuData;
-          allMenuData.forEach(item => {
-            if (item.month) availableMonths.add(item.month);
-            if (!item.weekday) item.weekday = `Day ${item.day}`;
-            if (!item.menuItem) item.menuItem = "Traditional Tiffin Special";
-            item.day = parseInt(item.day, 10);
-          });
-          const currentRealMonth = new Date().toLocaleString('default', { month: 'long' });
-          if (availableMonths.has(currentRealMonth)) currentMonth = currentRealMonth;
-          else currentMonth = Array.from(availableMonths)[0] || "January";
-          renderMenu();
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            data: allMenuData,
-            month: currentMonth,
-            availableMonths: Array.from(availableMonths)
-          }));
-          dataLoaded = true;
-        } else {
-          throw new Error(data.error || "No menu data found.");
-        }
-      } catch (error) {
-        menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-cloud-download-alt fa-3x"></i><br><strong>⚠️ Sync Error</strong><br>${escapeHtml(error.message)}<br><br>🔧 Check connection.</div>`;
+  // ========== LOAD FROM CACHE (INSTANT UI) ==========
+  function loadFromCache() {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return;
+
+      const parsed = JSON.parse(cached);
+
+      allMenuData = parsed.data || [];
+      currentMonth = parsed.month || "";
+      availableMonths = new Set(parsed.availableMonths || []);
+
+      if (allMenuData.length > 0) {
+        renderMenu();
         dataLoaded = true;
       }
+    } catch (e) {
+      console.warn("Cache load failed");
     }
+  }
 
-    loadFromCache();
-    fetchData();
+  // ========== FETCH FROM API ==========
+  async function fetchData() {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
 
-    // ---------- LOADING ANIMATION ----------
-    (function() {
-      const dabbas = document.querySelectorAll('#loader .dabba');
-      const rods = document.querySelectorAll('#loader .rod');
-      const topLock = document.querySelector('#loader .top-lock');
-      const handle = document.querySelector('#loader .handle');
-      const floatingContainer = document.getElementById('floatingItems');
+      if (data.success && data.menuData && data.menuData.length > 0) {
+        allMenuData = data.menuData;
 
-      let sparkleCount = 0;
-      const items = ['chili','spoon','chapati','curry','spice','rice','veg','ladle','pickle','bread','onion','tomato','fork','pot','plate'];
+        allMenuData.forEach(item => {
+          if (item.month) availableMonths.add(item.month);
+          if (!item.weekday) item.weekday = `Day ${item.day}`;
+          if (!item.menuItem) item.menuItem = "Traditional Tiffin Special";
+          item.day = parseInt(item.day, 10);
+        });
 
-      function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
+        const currentRealMonth = new Date().toLocaleString('default', { month: 'long' });
 
-      const shuffledItems = shuffleArray([...items]);
-      let itemIndex = 0;
+        if (availableMonths.has(currentRealMonth)) currentMonth = currentRealMonth;
+        else currentMonth = Array.from(availableMonths)[0] || "January";
 
-      function createFloatItem() {
-        if (itemIndex >= shuffledItems.length) itemIndex = 0;
-        const itemType = shuffledItems[itemIndex];
-        const itemDiv = document.createElement('div');
-        itemDiv.classList.add('float-item', itemType);
-        const side = Math.random() < 0.5 ? 'left' : 'right';
-        const x = side === 'left' ? Math.random() * -50 - 20 : Math.random() * 50 + 120;
-        const y = Math.random() * 200 + 100;
-        itemDiv.style.left = `${x}px`;
-        itemDiv.style.top = `${y}px`;
-        const delay = itemIndex * 0.12;
-        const duration = 1.8 + Math.random() * 0.8;
-        itemDiv.style.animationDelay = `${delay}s`;
-        itemDiv.style.animationDuration = `${duration}s`;
-        floatingContainer.appendChild(itemDiv);
-        setTimeout(() => itemDiv.remove(), (duration + delay) * 1000 + 300);
-        itemIndex++;
-      }
+        renderMenu();
 
-      for (let i = 0; i < shuffledItems.length; i++) {
-        setTimeout(createFloatItem, i * 120);
-      }
+        // 💾 SAVE CACHE
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          data: allMenuData,
+          month: currentMonth,
+          availableMonths: Array.from(availableMonths)
+        }));
 
-      dabbas.forEach((dabba, i) => {
-        setTimeout(() => {
-          dabba.classList.add('visible');
-          setTimeout(() => {
-            dabba.classList.add('filled');
-            const smokeContainer = dabba.querySelector('.smoke-container');
-            if (smokeContainer) smokeContainer.style.opacity = '1';
-          }, 150);
-        }, i * 350);
-      });
-
-      setTimeout(() => {
-        rods.forEach(rod => rod.classList.add('visible'));
-      }, dabbas.length * 350 + 150);
-
-      setTimeout(() => {
-        topLock.classList.add('visible');
-        setTimeout(() => {
-          topLock.classList.add('locking');
-          const sparkleInterval = setInterval(() => {
-            if (sparkleCount < 6) createSparkle();
-            else clearInterval(sparkleInterval);
-          }, 120);
-          setTimeout(() => clearInterval(sparkleInterval), 720);
-        }, 150);
-      }, 1050);
-
-      function createSparkle() {
-        const sparkle = document.createElement('div');
-        sparkle.classList.add('sparkle');
-        sparkle.style.left = (50 + (Math.random() - 0.5) * 20) + '%';
-        topLock.appendChild(sparkle);
-        setTimeout(() => sparkle.remove(), 500);
-        sparkleCount++;
-      }
-
-      setTimeout(() => {
-        handle.classList.add('visible');
-        setTimeout(() => {
-          handle.classList.add('locked');
-        }, 300);
-      }, 1400);
-    })();
-
-    function hideLoaderWhenReady() {
-      const minTimePassed = performance.now() > 1800;
-      if (dataLoaded && minTimePassed) {
-        document.getElementById('loader').classList.add('hidden');
+        dataLoaded = true;
       } else {
-        requestAnimationFrame(hideLoaderWhenReady);
+        throw new Error(data.error || "No menu data found.");
       }
+
+    } catch (error) {
+      console.error(error);
+      menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-cloud-download-alt fa-3x"></i><br><strong>⚠️ Sync Error</strong><br>${escapeHtml(error.message)}<br><br>🔧 Check connection.</div>`;
+      dataLoaded = true;
     }
-    requestAnimationFrame(hideLoaderWhenReady);
+  }
 
-    // ---------- FULLY FUNCTIONAL DOWNLOAD & SHARE ----------
-    const captureArea = document.getElementById('captureArea');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const shareBtn = document.getElementById('shareBtn');
+  // 🔥 RUN CACHE + FETCH IN PARALLEL
+  loadFromCache();
+  fetchData();
 
-    async function captureHighResBlob() {
-      const canvas = await html2canvas(captureArea, {
-        scale: 2.5,
-        backgroundColor: null,
-        allowTaint: true,
-        useCORS: true,
-        logging: false,
-      });
-      return new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-    }
+  // ========== LOADING ANIMATION ==========
+  (function() {
+    const dabbas = document.querySelectorAll('#loader .dabba');
+    const rods = document.querySelectorAll('#loader .rod');
+    const topLock = document.querySelector('#loader .top-lock');
+    const handle = document.querySelector('#loader .handle');
+    const floatingContainer = document.getElementById('floatingItems');
 
-    async function downloadImage() {
-      try {
-        downloadBtn.disabled = true;
-        const blob = await captureHighResBlob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Faiz_ul_Mawaid_${currentMonth || 'Menu'}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      } catch (err) {
-        alert('Download failed: ' + err.message);
-      } finally {
-        downloadBtn.disabled = false;
+    let sparkleCount = 0;
+    const items = ['chili','spoon','chapati','curry','spice','rice','veg','ladle','pickle','bread','onion','tomato','fork','pot','plate'];
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
       }
+      return array;
     }
 
-    async function shareImage() {
-      try {
-        shareBtn.disabled = true;
-        const blob = await captureHighResBlob();
-        const file = new File([blob], 'tiffin_menu.png', { type: 'image/png' });
+    const shuffledItems = shuffleArray([...items]);
+    let itemIndex = 0;
 
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: 'Faiz ul Mawaid | Chattogram Tiffin Menu',
-            text: 'Check out today\'s tiffin menu!',
-            files: [file]
-          });
-        } else {
-          // fallback: copy link / open share dialog via Web Share (without file)
-          if (navigator.share) {
-            await navigator.share({
-              title: 'Faiz ul Mawaid | Chattogram',
-              text: 'Tiffin menu — Faiz ul Mawaid Chattogram',
-              url: window.location.href,
-            });
-          } else {
-            // ultimate fallback: copy link
-            await navigator.clipboard.writeText(window.location.href);
-            alert('📋 Link copied! (File share not supported on this browser)');
-          }
-        }
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.warn(err);
-          alert('Sharing failed. You can download instead.');
-        }
-      } finally {
-        shareBtn.disabled = false;
-      }
+    function createFloatItem() {
+      if (itemIndex >= shuffledItems.length) itemIndex = 0;
+
+      const itemType = shuffledItems[itemIndex];
+      const itemDiv = document.createElement('div');
+      itemDiv.classList.add('float-item', itemType);
+
+      const side = Math.random() < 0.5 ? 'left' : 'right';
+      const x = side === 'left' ? Math.random() * -50 - 20 : Math.random() * 50 + 120;
+      const y = Math.random() * 200 + 100;
+
+      itemDiv.style.left = `${x}px`;
+      itemDiv.style.top = `${y}px`;
+
+      const delay = itemIndex * 0.12;
+      const duration = 1.8 + Math.random() * 0.8;
+
+      itemDiv.style.animationDelay = `${delay}s`;
+      itemDiv.style.animationDuration = `${duration}s`;
+
+      floatingContainer.appendChild(itemDiv);
+      setTimeout(() => itemDiv.remove(), (duration + delay) * 1000 + 300);
+
+      itemIndex++;
     }
 
-    downloadBtn.addEventListener('click', downloadImage);
-    shareBtn.addEventListener('click', shareImage);
+    for (let i = 0; i < shuffledItems.length; i++) {
+      setTimeout(createFloatItem, i * 120);
+    }
 
-    // Edge case: if Web Share API doesn't support files, we fallback gracefully.
-    // Also ensure buttons are clickable.
+    dabbas.forEach((dabba, i) => {
+      setTimeout(() => {
+        dabba.classList.add('visible');
+        setTimeout(() => {
+          dabba.classList.add('filled');
+          const smokeContainer = dabba.querySelector('.smoke-container');
+          if (smokeContainer) smokeContainer.style.opacity = '1';
+        }, 150);
+      }, i * 350);
+    });
+
+    setTimeout(() => {
+      rods.forEach(rod => rod.classList.add('visible'));
+    }, dabbas.length * 350 + 150);
+
+    setTimeout(() => {
+      topLock.classList.add('visible');
+      setTimeout(() => {
+        topLock.classList.add('locking');
+
+        const sparkleInterval = setInterval(() => {
+          if (sparkleCount < 6) createSparkle();
+          else clearInterval(sparkleInterval);
+        }, 120);
+
+        setTimeout(() => clearInterval(sparkleInterval), 720);
+      }, 150);
+    }, 1050);
+
+    function createSparkle() {
+      const sparkle = document.createElement('div');
+      sparkle.classList.add('sparkle');
+      sparkle.style.left = (50 + (Math.random() - 0.5) * 20) + '%';
+      topLock.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 500);
+      sparkleCount++;
+    }
+
+    setTimeout(() => {
+      handle.classList.add('visible');
+      setTimeout(() => {
+        handle.classList.add('locked');
+      }, 300);
+    }, 1400);
+
   })();
+
+  // ========== SMART LOADER HIDE ==========
+  function hideLoaderWhenReady() {
+    const minTimePassed = performance.now() > 1800;
+
+    if (dataLoaded && minTimePassed) {
+      document.getElementById('loader').classList.add('hidden');
+    } else {
+      requestAnimationFrame(hideLoaderWhenReady);
+    }
+  }
+
+  requestAnimationFrame(hideLoaderWhenReady);
 </script>
 </body>
 </html>
