@@ -17,6 +17,11 @@
   <meta name="twitter:title" content="Faiz ul Mawaid | Chattogram - Tiffin Menu" />
   <meta name="twitter:description" content="Authentic Tiffin Service in Chattogram. Daily specials, tiffin rules & more." />
   <meta name="twitter:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
+  <meta name="twitter:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
+
+<link rel="preconnect" href="https://script.google.com">
+
+<title>Faiz ul Mawaid | Chattogram - Tiffin Menu</title>
   
   <!-- Favicon (optional but clean) -->
   <link rel="icon" type="image/png" href="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
@@ -677,6 +682,7 @@
       <div class="shadow"></div>
     </div>
   </div>
+  <div class="footer"><i class="fas fa-database"></i> Faiz ul Mawaid Chattogram | Developed By Mohammed Paghdiwala</div>
 </div>
 <div class="app-wrapper">
   <div id="captureArea">
@@ -695,7 +701,7 @@
         <li><i class="fas fa-clock"></i> Please put your FMB Tiffin before 10:00 AM</li>
       </ul>
     </div>
-    <div class="footer"><i class="fas fa-database"></i> Faiz ul Mawaid Chattogram | Developed By Mohammed Paghdiwala</div>
+    <div class="footer"></div>
   </div>
 </div>
 <!-- TOP RIGHT BUTTONS: DOWNLOAD + SHARE -->
@@ -723,7 +729,17 @@
     setTimeout(() => { topLock.classList.add('visible'); setTimeout(() => { topLock.classList.add('locking'); const sparkleInterval = setInterval(() => { if (sparkleCount < 6) createSparkle(); else clearInterval(sparkleInterval); }, 120); setTimeout(() => clearInterval(sparkleInterval), 720); }, 150); }, 1050);
     function createSparkle() { const sparkle = document.createElement('div'); sparkle.classList.add('sparkle'); sparkle.style.left = (50 + (Math.random() - 0.5) * 20) + '%'; topLock.appendChild(sparkle); setTimeout(() => sparkle.remove(), 500); sparkleCount++; }
     setTimeout(() => { handle.classList.add('visible'); setTimeout(() => { handle.classList.add('locked'); }, 300); }, 1400);
-    setTimeout(() => { document.getElementById('loader').classList.add('hidden'); }, 4000);
+    function hideLoaderWhenReady() {
+  if (dataLoaded) {
+    document.getElementById('loader').classList.add('hidden');
+  } else {
+    setTimeout(hideLoaderWhenReady, 100); // check again quickly
+  }
+}
+
+// Keep original animation timing but wait for data
+setTimeout(hideLoaderWhenReady, 3500);
+setTimeout(hideLoaderWhenReady, 3500);
   })();
   // ========== FETCH MENU DATA ==========
   const API_URL = "https://script.google.com/macros/s/AKfycbwV4-aCPrfq4TS95yvclE9IU5WU9QIAhtWIvYZSXA90sL7R7R8SwiA_GKSpcdmNphBB/exec";
@@ -771,30 +787,40 @@
     }
     menuGrid.innerHTML = html;
   }
-  async function fetchData() {
-    try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
-      if (data.success && data.menuData && data.menuData.length > 0) {
-        allMenuData = data.menuData;
-        allMenuData.forEach(item => {
-          if (item.month) availableMonths.add(item.month);
-          if (!item.weekday) item.weekday = `Day ${item.day}`;
-          if (!item.menuItem) item.menuItem = "Traditional Tiffin Special";
-          item.day = parseInt(item.day, 10);
-        });
-        const currentRealMonth = new Date().toLocaleString('default', { month: 'long' });
-        if (availableMonths.has(currentRealMonth)) currentMonth = currentRealMonth;
-        else currentMonth = Array.from(availableMonths)[0] || "January";
-        renderMenu();
-      } else {
-        throw new Error(data.error || "No menu data found.");
-      }
-    } catch (error) {
-      console.error(error);
-      menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-cloud-download-alt fa-3x"></i><br><strong>⚠️ Sync Error</strong><br>${escapeHtml(error.message)}<br><br>🔧 Check connection.</div>`;
+ let dataLoaded = false;
+
+async function fetchData() {
+  try {
+    const response = await fetch(API_URL);
+    const data = await response.json();
+
+    if (data.success && data.menuData && data.menuData.length > 0) {
+      allMenuData = data.menuData;
+
+      allMenuData.forEach(item => {
+        if (item.month) availableMonths.add(item.month);
+        if (!item.weekday) item.weekday = `Day ${item.day}`;
+        if (!item.menuItem) item.menuItem = "Traditional Tiffin Special";
+        item.day = parseInt(item.day, 10);
+      });
+
+      const currentRealMonth = new Date().toLocaleString('default', { month: 'long' });
+
+      if (availableMonths.has(currentRealMonth)) currentMonth = currentRealMonth;
+      else currentMonth = Array.from(availableMonths)[0] || "January";
+
+      renderMenu();
+      dataLoaded = true;
+
+    } else {
+      throw new Error(data.error || "No menu data found.");
     }
+  } catch (error) {
+    console.error(error);
+    menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-cloud-download-alt fa-3x"></i><br><strong>⚠️ Sync Error</strong><br>${escapeHtml(error.message)}<br><br>🔧 Check connection.</div>`;
+    dataLoaded = true;
   }
+}
   fetchData();
   // ========== HIGH RESOLUTION IMAGE GENERATION (SHARP & SCALABLE) ==========
   async function getHighResImageBlob() {
@@ -854,7 +880,7 @@
       const blob = await getHighResImageBlob();
       const file = new File([blob], `Faiz_Tiffin_Calendar_${currentMonth}.jpg`, { type: 'image/jpeg' });
       if (navigator.share) {
-        await navigator.share({ title: 'Faiz ul Mawaid Tiffin Menu', text: 'Daily tiffin menu from Chattogram', files: [file] });
+        await navigator.share({ title: 'Faiz ul Mawaid Tiffin Menu', text: '', files: [file] });
       } else {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
