@@ -250,7 +250,7 @@
       font-size: 0.55rem;
       color: #b4916a;
     }
-    /* ----- TOP RIGHT ACTION BUTTONS (Download + Share) ----- */
+    /* ----- TOP RIGHT ACTION BUTTONS (ONLY SHARE REMAINING) ----- */
     .action-buttons {
       position: fixed;
       top: 16px;
@@ -704,9 +704,8 @@
     <div class="footer"></div>
   </div>
 </div>
-<!-- TOP RIGHT BUTTONS: DOWNLOAD + SHARE -->
+<!-- TOP RIGHT BUTTONS: ONLY SHARE BUTTON (DOWNLOAD REMOVED) -->
 <div class="action-buttons">
-  <button class="action-btn" id="downloadBtn" title="Save as Image"><i class="fas fa-download"></i></button>
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
 </div>
 <script>
@@ -822,7 +821,7 @@ async function fetchData() {
   }
 }
   fetchData();
-  // ========== HIGH RESOLUTION IMAGE GENERATION (SHARP & SCALABLE) ==========
+  // ========== HIGH RESOLUTION IMAGE GENERATION (ONLY USED FOR SHARE) ==========
   async function getHighResImageBlob() {
     const captureElement = document.getElementById('captureArea');
     if (!captureElement) throw new Error("Capture area missing");
@@ -850,27 +849,7 @@ async function fetchData() {
       captureElement.style.maxWidth = originalMaxWidth || '';
     }
   }
-  const downloadBtn = document.getElementById('downloadBtn');
-  downloadBtn.addEventListener('click', async () => {
-    try {
-      downloadBtn.style.pointerEvents = 'none';
-      const originalIcon = downloadBtn.innerHTML;
-      downloadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
-      const blob = await getHighResImageBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const timestamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
-      link.download = `Faiz_Tiffin_Calendar_${currentMonth}_${timestamp}.jpg`;
-      link.href = url;
-      link.click();
-      URL.revokeObjectURL(url);
-      downloadBtn.innerHTML = originalIcon;
-    } catch (err) {
-      alert("Failed to save high-res image: " + err.message);
-    } finally {
-      downloadBtn.style.pointerEvents = 'auto';
-    }
-  });
+  // SHARE BUTTON ONLY (DOWNLOAD BUTTON FULLY REMOVED)
   const shareBtn = document.getElementById('shareBtn');
   shareBtn.addEventListener('click', async () => {
     try {
