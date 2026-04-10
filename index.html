@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -709,7 +710,7 @@
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
 </div>
 <script>
-  // ========== LOADING ANIMATION (original) ==========
+  // ========== LOADING ANIMATION (unchanged) ==========
   (function() {
     const dabbas = document.querySelectorAll('#loader .dabba');
     const rods = document.querySelectorAll('#loader .rod');
@@ -718,35 +719,95 @@
     const floatingContainer = document.getElementById('floatingItems');
     let sparkleCount = 0;
     const items = ['chili', 'spoon', 'chapati', 'curry', 'spice', 'rice', 'veg', 'ladle', 'pickle', 'bread', 'onion', 'tomato', 'fork', 'pot', 'plate'];
-    function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+    
+    function shuffleArray(array) { 
+      for (let i = array.length - 1; i > 0; i--) { 
+        const j = Math.floor(Math.random() * (i + 1)); 
+        [array[i], array[j]] = [array[j], array[i]]; 
+      } 
+      return array; 
+    }
+    
     const shuffledItems = shuffleArray([...items]);
     let itemIndex = 0;
-    function createFloatItem() { if (itemIndex >= shuffledItems.length) itemIndex = 0; const itemType = shuffledItems[itemIndex]; const itemDiv = document.createElement('div'); itemDiv.classList.add('float-item', itemType); const side = Math.random() < 0.5 ? 'left' : 'right'; const x = side === 'left' ? Math.random() * -50 - 20 : Math.random() * 50 + 120; const y = Math.random() * 200 + 100; itemDiv.style.left = `${x}px`; itemDiv.style.top = `${y}px`; const delay = itemIndex * 0.12; const duration = 1.8 + Math.random() * 0.8; itemDiv.style.animationDelay = `${delay}s`; itemDiv.style.animationDuration = `${duration}s`; floatingContainer.appendChild(itemDiv); setTimeout(() => itemDiv.remove(), (duration + delay) * 1000 + 300); itemIndex++; }
+    
+    function createFloatItem() { 
+      if (itemIndex >= shuffledItems.length) itemIndex = 0; 
+      const itemType = shuffledItems[itemIndex]; 
+      const itemDiv = document.createElement('div'); 
+      itemDiv.classList.add('float-item', itemType); 
+      const side = Math.random() < 0.5 ? 'left' : 'right'; 
+      const x = side === 'left' ? Math.random() * -50 - 20 : Math.random() * 50 + 120; 
+      const y = Math.random() * 200 + 100; 
+      itemDiv.style.left = `${x}px`; 
+      itemDiv.style.top = `${y}px`; 
+      const delay = itemIndex * 0.12; 
+      const duration = 1.8 + Math.random() * 0.8; 
+      itemDiv.style.animationDelay = `${delay}s`; 
+      itemDiv.style.animationDuration = `${duration}s`; 
+      floatingContainer.appendChild(itemDiv); 
+      setTimeout(() => itemDiv.remove(), (duration + delay) * 1000 + 300); 
+      itemIndex++; 
+    }
+    
     for (let i = 0; i < shuffledItems.length; i++) setTimeout(createFloatItem, i * 120);
-    dabbas.forEach((dabba, i) => { setTimeout(() => { dabba.classList.add('visible'); setTimeout(() => { dabba.classList.add('filled'); const smokeContainer = dabba.querySelector('.smoke-container'); if (smokeContainer) smokeContainer.style.opacity = '1'; }, 150); }, i * 350); });
+    
+    dabbas.forEach((dabba, i) => { 
+      setTimeout(() => { 
+        dabba.classList.add('visible'); 
+        setTimeout(() => { 
+          dabba.classList.add('filled'); 
+          const smokeContainer = dabba.querySelector('.smoke-container'); 
+          if (smokeContainer) smokeContainer.style.opacity = '1'; 
+        }, 150); 
+      }, i * 350); 
+    });
+    
     setTimeout(() => { rods.forEach(rod => rod.classList.add('visible')); }, dabbas.length * 350 + 150);
-    setTimeout(() => { topLock.classList.add('visible'); setTimeout(() => { topLock.classList.add('locking'); const sparkleInterval = setInterval(() => { if (sparkleCount < 6) createSparkle(); else clearInterval(sparkleInterval); }, 120); setTimeout(() => clearInterval(sparkleInterval), 720); }, 150); }, 1050);
-    function createSparkle() { const sparkle = document.createElement('div'); sparkle.classList.add('sparkle'); sparkle.style.left = (50 + (Math.random() - 0.5) * 20) + '%'; topLock.appendChild(sparkle); setTimeout(() => sparkle.remove(), 500); sparkleCount++; }
-    setTimeout(() => { handle.classList.add('visible'); setTimeout(() => { handle.classList.add('locked'); }, 300); }, 1400);
-    function hideLoaderWhenReady() {
-  if (dataLoaded) {
-    document.getElementById('loader').classList.add('hidden');
-  } else {
-    setTimeout(hideLoaderWhenReady, 100); // check again quickly
-  }
-}
+    setTimeout(() => { 
+      topLock.classList.add('visible'); 
+      setTimeout(() => { 
+        topLock.classList.add('locking'); 
+        const sparkleInterval = setInterval(() => { 
+          if (sparkleCount < 6) createSparkle(); 
+          else clearInterval(sparkleInterval); 
+        }, 120); 
+        setTimeout(() => clearInterval(sparkleInterval), 720); 
+      }, 150); 
+    }, 1050);
+    
+    function createSparkle() { 
+      const sparkle = document.createElement('div'); 
+      sparkle.classList.add('sparkle'); 
+      sparkle.style.left = (50 + (Math.random() - 0.5) * 20) + '%'; 
+      topLock.appendChild(sparkle); 
+      setTimeout(() => sparkle.remove(), 500); 
+      sparkleCount++; 
+    }
+    
+    setTimeout(() => { 
+      handle.classList.add('visible'); 
+      setTimeout(() => { handle.classList.add('locked'); }, 300); 
+    }, 1400);
 
-// Keep original animation timing but wait for data
-setTimeout(hideLoaderWhenReady, 3500);
-setTimeout(hideLoaderWhenReady, 3500);
+    function hideLoaderWhenReady() {
+      if (dataLoaded) document.getElementById('loader').classList.add('hidden');
+      else setTimeout(hideLoaderWhenReady, 100);
+    }
+    setTimeout(hideLoaderWhenReady, 3500);
   })();
-  // ========== FETCH MENU DATA ==========
+
+  // ========== MAIN LOGIC - LAST 6 DAYS WITH MENU ITEM (ASCENDING) ==========
   const API_URL = "https://script.google.com/macros/s/AKfycbwV4-aCPrfq4TS95yvclE9IU5WU9QIAhtWIvYZSXA90sL7R7R8SwiA_GKSpcdmNphBB/exec";
   let allMenuData = [];
-  let currentMonth = "";
-  let availableMonths = new Set();
+  let dataLoaded = false;
   const menuGrid = document.getElementById('menuGrid');
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+  function escapeHtml(str) { 
+    if (!str) return ''; 
+    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); 
+  }
+
   function getMenuItemStyle(entry) {
     let style = "";
     if (entry.color) style += `color: ${entry.color}; `;
@@ -757,20 +818,51 @@ setTimeout(hideLoaderWhenReady, 3500);
     style += `padding: 4px; border-radius: 6px; display: block;`;
     return style;
   }
-  function renderMenu() {
-    let filtered = allMenuData.filter(item => item.month === currentMonth);
-    filtered.sort((a,b) => a.day - b.day);
-    if (filtered.length === 0) {
-      menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu available for ${escapeHtml(currentMonth)}.<br>Please check back later.</div>`;
+
+  const monthOrder = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  function renderLast6DaysWithMenu() {
+    if (allMenuData.length === 0) {
+      menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu data received from sheet.</div>`;
+      console.warn("allMenuData is empty");
       return;
     }
+
+    // Filter only rows that actually have a menu item
+    const validEntries = allMenuData.filter(item => {
+      const menu = (item.menuItem || "").toString().trim();
+      return menu !== "" && menu.toLowerCase() !== "null" && menu.toLowerCase() !== "undefined";
+    });
+
+    console.log(`Found ${validEntries.length} valid menu entries`);
+
+    if (validEntries.length === 0) {
+      menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu items found in the sheet.</div>`;
+      return;
+    }
+
+    // Sort in ASCENDING order (oldest → newest)
+    const sortedData = [...validEntries].sort((a, b) => {
+      const monthA = monthOrder.indexOf((a.month || "").trim());
+      const monthB = monthOrder.indexOf((b.month || "").trim());
+      
+      if (monthA !== monthB) return monthA - monthB;
+      return (parseInt(a.day) || 0) - (parseInt(b.day) || 0);
+    });
+
+    // Take last 6 valid entries
+    const last6 = sortedData.slice(-6);
+
+    console.log("Rendering last 6 days:", last6.map(d => `${d.month} ${d.day}`));
+
     let html = '';
-    for (const entry of filtered) {
-      const dayNumber = entry.day;
+    for (const entry of last6) {
+      const dayNumber = entry.day || '';
       const weekdayName = entry.weekday ? escapeHtml(entry.weekday) : '—';
-      const monthDisplay = entry.month ? escapeHtml(entry.month) : escapeHtml(currentMonth);
+      const monthDisplay = entry.month ? escapeHtml(entry.month) : '—';
       const menuText = entry.menuItem ? escapeHtml(entry.menuItem) : "Traditional Tiffin Special";
       const inlineStyle = getMenuItemStyle(entry);
+
       html += `<div class="menu-card">
         <div class="card-header">
           <div class="day-name"><i class="fas fa-calendar-alt"></i><span>${weekdayName}</span></div>
@@ -784,90 +876,98 @@ setTimeout(hideLoaderWhenReady, 3500);
         </div>
       </div>`;
     }
+
     menuGrid.innerHTML = html;
   }
- let dataLoaded = false;
 
-async function fetchData() {
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
+  async function fetchData() {
+    try {
+      console.log("Fetching data from Google Sheet...");
+      const response = await fetch(API_URL);
+      const data = await response.json();
 
-    if (data.success && data.menuData && data.menuData.length > 0) {
-      allMenuData = data.menuData;
+      console.log("Response received:", data);
 
-      allMenuData.forEach(item => {
-        if (item.month) availableMonths.add(item.month);
-        if (!item.weekday) item.weekday = `Day ${item.day}`;
-        if (!item.menuItem) item.menuItem = "Traditional Tiffin Special";
-        item.day = parseInt(item.day, 10);
-      });
+      if (data.success && data.menuData && Array.isArray(data.menuData)) {
+        allMenuData = data.menuData;
 
-      const currentRealMonth = new Date().toLocaleString('default', { month: 'long' });
+        // Clean data
+        allMenuData.forEach(item => {
+          if (!item.weekday) item.weekday = `Day ${item.day || ''}`;
+          item.menuItem = (item.menuItem || "").toString().trim();
+          item.day = parseInt(item.day, 10) || 0;
+          item.month = (item.month || "").toString().trim();
+        });
 
-      if (availableMonths.has(currentRealMonth)) currentMonth = currentRealMonth;
-      else currentMonth = Array.from(availableMonths)[0] || "January";
-
-      renderMenu();
+        renderLast6DaysWithMenu();
+        dataLoaded = true;
+      } else {
+        throw new Error(data.error || "Invalid response from server");
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      menuGrid.innerHTML = `<div class="no-data">
+        <i class="fas fa-cloud-download-alt fa-3x"></i><br>
+        <strong>⚠️ Sync Error</strong><br>
+        ${escapeHtml(error.message)}<br><br>
+        Please check internet or Google Sheet deployment.
+      </div>`;
       dataLoaded = true;
-
-    } else {
-      throw new Error(data.error || "No menu data found.");
     }
-  } catch (error) {
-    console.error(error);
-    menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-cloud-download-alt fa-3x"></i><br><strong>⚠️ Sync Error</strong><br>${escapeHtml(error.message)}<br><br>🔧 Check connection.</div>`;
-    dataLoaded = true;
   }
-}
+
   fetchData();
-  // ========== HIGH RESOLUTION IMAGE GENERATION (ONLY USED FOR SHARE) ==========
+
+  // ========== SHARE BUTTON (unchanged) ==========
   async function getHighResImageBlob() {
     const captureElement = document.getElementById('captureArea');
     if (!captureElement) throw new Error("Capture area missing");
+    
     const originalWidth = captureElement.style.width;
     const originalMaxWidth = captureElement.style.maxWidth;
+    
     try {
       captureElement.style.width = '540px';
       captureElement.style.maxWidth = '540px';
-      const rect = captureElement.getBoundingClientRect();
-      const logicalWidth = rect.width || 540;
-      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-      const targetScale = isMobile ? 3.0 : 3.8;
+      
       const canvas = await html2canvas(captureElement, {
-        scale: Math.min(targetScale, 4.2),
+        scale: 3.8,
         backgroundColor: '#fef9ef',
         useCORS: true,
         allowTaint: false,
-        logging: false,
-        width: captureElement.scrollWidth,
-        height: captureElement.scrollHeight
+        logging: false
       });
+      
       return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.92));
     } finally {
       captureElement.style.width = originalWidth || '';
       captureElement.style.maxWidth = originalMaxWidth || '';
     }
   }
-  // SHARE BUTTON ONLY (DOWNLOAD BUTTON FULLY REMOVED)
+
   const shareBtn = document.getElementById('shareBtn');
   shareBtn.addEventListener('click', async () => {
     try {
       shareBtn.style.pointerEvents = 'none';
       const originalIcon = shareBtn.innerHTML;
       shareBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+
       const blob = await getHighResImageBlob();
-      const file = new File([blob], `Faiz_Tiffin_Calendar_${currentMonth}.jpg`, { type: 'image/jpeg' });
+      const file = new File([blob], `Faiz_Tiffin_Last6Days.jpg`, { type: 'image/jpeg' });
+
       if (navigator.share) {
-        await navigator.share({ title: 'Faiz ul Mawaid Tiffin Menu', text: '', files: [file] });
+        await navigator.share({ 
+          title: 'Faiz ul Mawaid Tiffin Menu - Last 6 Days', 
+          files: [file] 
+        });
       } else {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = `Faiz_Tiffin_Calendar_${currentMonth}.jpg`;
+        link.download = `Faiz_Tiffin_Last6Days.jpg`;
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
-        alert("Your browser doesn't support native sharing. Image downloaded.");
+        alert("Image downloaded successfully!");
       }
       shareBtn.innerHTML = originalIcon;
     } catch (err) {
