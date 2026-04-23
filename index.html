@@ -773,9 +773,9 @@
     <div class="footer"></div>
   </div>
 </div>
-<!-- TOP RIGHT BUTTONS: ONLY SHARE BUTTON (DOWNLOAD REMOVED) -->
+<!-- TOP RIGHT BUTTONS -->
 <div class="action-buttons">
-  <button class="action-btn" id="installBtn" title="Install App" style="display: none;"><i class="fas fa-download"></i></button>
+  <button class="action-btn" id="installBtn" title="Install App"><i class="fas fa-download"></i></button>
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
 </div>
 <script>
@@ -864,8 +864,9 @@
     }
     setTimeout(hideLoaderWhenReady, 3500);
   })();
+  
   // ========== MAIN LOGIC - LAST 6 DAYS WITH MENU ITEM (ASCENDING) ==========
-  const API_URL = "https://script.google.com/macros/s/AKfycbzkWhLEYCHrlGeNpTLdn4c5Vj9o00OKgVMaYi_zbCKC-LsZXISns_9lbdaN1B8TiPRl/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwV4-aCPrfq4TS95yvclE9IU5WU9QIAhtWIvYZSXA90sL7R7R8SwiA_GKSpcdmNphBB/exec";
   let allMenuData = [];
   let dataLoaded = false;
   const menuGrid = document.getElementById('menuGrid');
@@ -965,6 +966,7 @@
     }
   }
   fetchData();
+  
   // ========== SHARE BUTTON (unchanged) ==========
   async function getHighResImageBlob() {
     const captureElement = document.getElementById('captureArea');
@@ -1035,33 +1037,59 @@
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBtn.style.display = 'flex';
-  });
-
-  // Detect iOS and show install guide
+  // Detect iOS
   function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   }
 
+  // Detect if already installed (standalone mode)
   function isInStandaloneMode() {
-    return ('standalone' in window.navigator) && window.navigator.standalone;
+    return (window.matchMedia('(display-mode: standalone)').matches) || 
+           ('standalone' in window.navigator && window.navigator.standalone) || 
+           document.referrer.includes('android-app://');
   }
 
-  // Show install button for iOS with custom guide
-  if (isIOS() && !isInStandaloneMode()) {
-    installBtn.style.display = 'flex';
-  }
-
-  installBtn.addEventListener('click', async () => {
+  // Show/hide install button based on platform and installation status
+  function handleInstallButton() {
+    // If app is already installed, hide the install button
+    if (isInStandaloneMode()) {
+      installBtn.style.display = 'none';
+      return;
+    }
+    
+    // For iOS - always show the install button (with guide)
     if (isIOS()) {
-      // Show iOS installation guide
+      installBtn.style.display = 'flex';
+      return;
+    }
+    
+    // For Android/Chrome - will be shown when beforeinstallprompt fires
+    // Keep it hidden initially
+    installBtn.style.display = 'none';
+  }
+
+  // Run on page load
+  handleInstallButton();
+
+  // For Android/Chrome - listen for install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Only show if not iOS (iOS doesn't fire this event anyway)
+    if (!isIOS()) {
+      installBtn.style.display = 'flex';
+    }
+  });
+
+  // Install button click handler
+  installBtn.addEventListener('click', async () => {
+    // For iOS - show installation guide
+    if (isIOS()) {
       document.getElementById('installGuideModal').style.display = 'flex';
       return;
     }
     
+    // For Android/Chrome
     if (!deferredPrompt) return;
     
     installBtn.style.pointerEvents = 'none';
@@ -1078,10 +1106,18 @@
     installBtn.style.pointerEvents = 'auto';
   });
 
+  // When app is installed
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
     deferredPrompt = null;
     console.log('PWA was installed');
+  });
+
+  // Check display mode changes
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+    if (evt.matches) {
+      installBtn.style.display = 'none';
+    }
   });
 </script>
 </body>
