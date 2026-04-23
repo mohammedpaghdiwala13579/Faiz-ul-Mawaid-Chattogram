@@ -779,7 +779,7 @@
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
 </div>
 <script>
-  // ========== LOADING ANIMATION (unchanged) ==========
+  // ========== LOADING ANIMATION (speed optimized) ==========
   (function() {
     const dabbas = document.querySelectorAll('#loader .dabba');
     const rods = document.querySelectorAll('#loader .rod');
@@ -810,8 +810,8 @@
       const y = Math.random() * 200 + 100;
       itemDiv.style.left = `${x}px`;
       itemDiv.style.top = `${y}px`;
-      const delay = itemIndex * 0.12;
-      const duration = 1.8 + Math.random() * 0.8;
+      const delay = itemIndex * 0.08; // faster
+      const duration = 1.5 + Math.random() * 0.8; // faster
       itemDiv.style.animationDelay = `${delay}s`;
       itemDiv.style.animationDuration = `${duration}s`;
       floatingContainer.appendChild(itemDiv);
@@ -819,8 +819,9 @@
       itemIndex++;
     }
    
-    for (let i = 0; i < shuffledItems.length; i++) setTimeout(createFloatItem, i * 120);
+    for (let i = 0; i < shuffledItems.length; i++) setTimeout(createFloatItem, i * 80); // faster interval
    
+    // Speed up dabba appearance
     dabbas.forEach((dabba, i) => {
       setTimeout(() => {
         dabba.classList.add('visible');
@@ -828,11 +829,11 @@
           dabba.classList.add('filled');
           const smokeContainer = dabba.querySelector('.smoke-container');
           if (smokeContainer) smokeContainer.style.opacity = '1';
-        }, 150);
-      }, i * 350);
+        }, 100); // faster fill
+      }, i * 200); // reduced delay
     });
    
-    setTimeout(() => { rods.forEach(rod => rod.classList.add('visible')); }, dabbas.length * 350 + 150);
+    setTimeout(() => { rods.forEach(rod => rod.classList.add('visible')); }, dabbas.length * 200 + 100);
     setTimeout(() => {
       topLock.classList.add('visible');
       setTimeout(() => {
@@ -840,11 +841,11 @@
         const sparkleInterval = setInterval(() => {
           if (sparkleCount < 6) createSparkle();
           else clearInterval(sparkleInterval);
-        }, 120);
-        setTimeout(() => clearInterval(sparkleInterval), 720);
-      }, 150);
-    }, 1050);
-   
+        }, 100);
+        setTimeout(() => clearInterval(sparkleInterval), 600);
+      }, 100);
+    }, 700); // reduced
+    
     function createSparkle() {
       const sparkle = document.createElement('div');
       sparkle.classList.add('sparkle');
@@ -856,13 +857,14 @@
    
     setTimeout(() => {
       handle.classList.add('visible');
-      setTimeout(() => { handle.classList.add('locked'); }, 300);
-    }, 1400);
+      setTimeout(() => { handle.classList.add('locked'); }, 200);
+    }, 900);
+    
     function hideLoaderWhenReady() {
       if (dataLoaded) document.getElementById('loader').classList.add('hidden');
-      else setTimeout(hideLoaderWhenReady, 100);
+      else setTimeout(hideLoaderWhenReady, 50); // faster check
     }
-    setTimeout(hideLoaderWhenReady, 3500);
+    setTimeout(hideLoaderWhenReady, 2000); // reduced overall wait
   })();
   
   // ========== MAIN LOGIC - LAST 6 DAYS WITH MENU ITEM (ASCENDING) ==========
