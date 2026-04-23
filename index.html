@@ -670,6 +670,56 @@
       50% { opacity: 1; transform: translateX(-50%) scale(1.2) rotate(180deg) translateY(-10px); }
       100% { opacity: 0; transform: translateX(-50%) scale(0) rotate(360deg) translateY(-20px); }
     }
+    /* iOS Install Guide Modal */
+    .install-guide-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10001;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .install-guide-content {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .install-guide-content h3 {
+      margin-bottom: 16px;
+      color: #2c2418;
+    }
+    .install-guide-content p {
+      margin-bottom: 20px;
+      line-height: 1.6;
+      color: #5a4a3a;
+    }
+    .install-guide-content .share-icon {
+      background: #007AFF;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 10px 0;
+    }
+    .install-guide-content button {
+      background: linear-gradient(145deg, #e0a04b, #c9852e);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -690,6 +740,19 @@
   </div>
   <div class="footer"><i class="fas fa-database"></i> Faiz ul Mawaid Chattogram | Developed By Mohammed Paghdiwala</div>
 </div>
+
+<!-- iOS Install Guide Modal -->
+<div class="install-guide-modal" id="installGuideModal">
+  <div class="install-guide-content">
+    <h3>Install Faiz ul Mawaid</h3>
+    <p>To install this app on your iPhone/iPad:</p>
+    <p>1. Tap the <strong>Share</strong> button <i class="fas fa-share-alt" style="color: #007AFF;"></i> at the bottom</p>
+    <p>2. Scroll down and tap <strong>"Add to Home Screen"</strong> <i class="fas fa-plus-square"></i></p>
+    <p>3. Tap <strong>"Add"</strong> in the top right</p>
+    <button onclick="document.getElementById('installGuideModal').style.display='none'">Got it</button>
+  </div>
+</div>
+
 <div class="app-wrapper">
   <div id="captureArea">
     <div class="hero">
@@ -802,7 +865,7 @@
     setTimeout(hideLoaderWhenReady, 3500);
   })();
   // ========== MAIN LOGIC - LAST 6 DAYS WITH MENU ITEM (ASCENDING) ==========
-  const API_URL = "https://script.google.com/macros/s/AKfycbwUSVA7jxo8hSHhx-vRLP4dcb_867ozkPwNEmNH1OEPTbPPSTPShPr6H0GLW2Uaj5XR/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwV4-aCPrfq4TS95yvclE9IU5WU9QIAhtWIvYZSXA90sL7R7R8SwiA_GKSpcdmNphBB/exec";
   let allMenuData = [];
   let dataLoaded = false;
   const menuGrid = document.getElementById('menuGrid');
@@ -968,7 +1031,7 @@
     });
   }
 
-  // Install Prompt
+  // Install Prompt - for Android/Chrome
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
@@ -978,8 +1041,29 @@
     installBtn.style.display = 'flex';
   });
 
+  // Detect iOS and show install guide
+  function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function isInStandaloneMode() {
+    return ('standalone' in window.navigator) && window.navigator.standalone;
+  }
+
+  // Show install button for iOS with custom guide
+  if (isIOS() && !isInStandaloneMode()) {
+    installBtn.style.display = 'flex';
+  }
+
   installBtn.addEventListener('click', async () => {
+    if (isIOS()) {
+      // Show iOS installation guide
+      document.getElementById('installGuideModal').style.display = 'flex';
+      return;
+    }
+    
     if (!deferredPrompt) return;
+    
     installBtn.style.pointerEvents = 'none';
     const originalIcon = installBtn.innerHTML;
     installBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
@@ -997,6 +1081,7 @@
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
     deferredPrompt = null;
+    console.log('PWA was installed');
   });
 </script>
 </body>
