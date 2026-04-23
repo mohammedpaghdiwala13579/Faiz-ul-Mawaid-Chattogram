@@ -19,6 +19,8 @@
   <meta name="twitter:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
   <meta name="twitter:image" content="https://i.ibb.co.com/VKYXZLM/Colorful-and-vibrant-tiffin-lunch-spread-1.png" />
 <link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="dns-prefetch" href="https://script.google.com">
 <title>Faiz ul Mawaid | Chattogram - Tiffin Menu</title>
  
   <!-- Favicon (optional but clean) -->
@@ -140,6 +142,7 @@
       overflow: hidden;
       border: 1px solid #f0e0cb;
       box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      transition: opacity 0.3s ease;
     }
     .card-header {
       padding: 0.5rem 0.7rem;
@@ -339,7 +342,7 @@
       align-items: center;
       justify-content: center;
       z-index: 10000;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.4s ease;
       color: #3e3b36;
       flex-direction: column;
       font-family: 'Inter', sans-serif;
@@ -720,6 +723,13 @@
       margin-top: 16px;
       width: 100%;
     }
+    /* fast loading indicator for data */
+    .loading-placeholder {
+      grid-column: span 2;
+      text-align: center;
+      padding: 2rem;
+      color: #b6926e;
+    }
   </style>
 </head>
 <body>
@@ -760,7 +770,9 @@
       <h3>Chattogram</h3>
       <div class="brand">الحمد لله والشكر لوليه</div>
     </div>
-    <div class="menu-grid" id="menuGrid" role="feed"></div>
+    <div class="menu-grid" id="menuGrid" role="feed">
+      <div class="loading-placeholder"><i class="fas fa-spinner fa-pulse fa-2x"></i><br><br>Loading menu...</div>
+    </div>
     <div class="notice-board">
       <div class="rules-header"><i class="fas fa-clipboard-list"></i> Tiffin Rules</div>
       <ul class="rules-list">
@@ -779,7 +791,7 @@
   <button class="action-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
 </div>
 <script>
-  // ========== LOADING ANIMATION (speed optimized) ==========
+  // ========== LOADING ANIMATION (exactly 2 seconds then hide) ==========
   (function() {
     const dabbas = document.querySelectorAll('#loader .dabba');
     const rods = document.querySelectorAll('#loader .rod');
@@ -810,8 +822,8 @@
       const y = Math.random() * 200 + 100;
       itemDiv.style.left = `${x}px`;
       itemDiv.style.top = `${y}px`;
-      const delay = itemIndex * 0.08; // faster
-      const duration = 1.5 + Math.random() * 0.8; // faster
+      const delay = itemIndex * 0.08;
+      const duration = 1.5 + Math.random() * 0.8;
       itemDiv.style.animationDelay = `${delay}s`;
       itemDiv.style.animationDuration = `${duration}s`;
       floatingContainer.appendChild(itemDiv);
@@ -819,9 +831,8 @@
       itemIndex++;
     }
    
-    for (let i = 0; i < shuffledItems.length; i++) setTimeout(createFloatItem, i * 80); // faster interval
+    for (let i = 0; i < shuffledItems.length; i++) setTimeout(createFloatItem, i * 80);
    
-    // Speed up dabba appearance
     dabbas.forEach((dabba, i) => {
       setTimeout(() => {
         dabba.classList.add('visible');
@@ -829,8 +840,8 @@
           dabba.classList.add('filled');
           const smokeContainer = dabba.querySelector('.smoke-container');
           if (smokeContainer) smokeContainer.style.opacity = '1';
-        }, 100); // faster fill
-      }, i * 200); // reduced delay
+        }, 100);
+      }, i * 200);
     });
    
     setTimeout(() => { rods.forEach(rod => rod.classList.add('visible')); }, dabbas.length * 200 + 100);
@@ -844,7 +855,7 @@
         }, 100);
         setTimeout(() => clearInterval(sparkleInterval), 600);
       }, 100);
-    }, 700); // reduced
+    }, 700);
     
     function createSparkle() {
       const sparkle = document.createElement('div');
@@ -860,22 +871,30 @@
       setTimeout(() => { handle.classList.add('locked'); }, 200);
     }, 900);
     
-    function hideLoaderWhenReady() {
-      if (dataLoaded) document.getElementById('loader').classList.add('hidden');
-      else setTimeout(hideLoaderWhenReady, 50); // faster check
-    }
-    setTimeout(hideLoaderWhenReady, 2000); // reduced overall wait
+    // Force hide loader after exactly 2000ms (2 seconds)
+    setTimeout(() => {
+      const loaderElement = document.getElementById('loader');
+      if (loaderElement) {
+        loaderElement.classList.add('hidden');
+      }
+    }, 2000);
   })();
   
-  // ========== MAIN LOGIC - LAST 6 DAYS WITH MENU ITEM (ASCENDING) ==========
+  // ========== OPTIMIZED GOOGLE SHEETS INTEGRATION (FAST LOADING WITH CACHE) ==========
   const API_URL = "https://script.google.com/macros/s/AKfycbwxTQXh6hMiCUjdkmEaUeuMTnCZ6wQW_tGZ71eyrLGSmAwlWHtblVTsrnXozvJt_tgR/exec";
   let allMenuData = [];
-  let dataLoaded = false;
   const menuGrid = document.getElementById('menuGrid');
+  
+  // Cache key for localStorage
+  const CACHE_KEY = 'faiz_menu_cache';
+  const CACHE_TIMESTAMP_KEY = 'faiz_menu_cache_time';
+  const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours cache
+  
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
   }
+  
   function getMenuItemStyle(entry) {
     let style = "";
     if (entry.color) style += `color: ${entry.color}; `;
@@ -886,34 +905,33 @@
     style += `padding: 4px; border-radius: 6px; display: block;`;
     return style;
   }
+  
   const monthOrder = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  
   function renderLast6DaysWithMenu() {
     if (allMenuData.length === 0) {
       menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu data received from sheet.</div>`;
-      console.warn("allMenuData is empty");
       return;
     }
-    // Filter only rows that actually have a menu item
+    
     const validEntries = allMenuData.filter(item => {
       const menu = (item.menuItem || "").toString().trim();
       return menu !== "" && menu.toLowerCase() !== "null" && menu.toLowerCase() !== "undefined";
     });
-    console.log(`Found ${validEntries.length} valid menu entries`);
+    
     if (validEntries.length === 0) {
       menuGrid.innerHTML = `<div class="no-data"><i class="fas fa-calendar-day fa-2x"></i><br><br>No menu items found in the sheet.</div>`;
       return;
     }
-    // Sort in ASCENDING order (oldest → newest)
+    
     const sortedData = [...validEntries].sort((a, b) => {
       const monthA = monthOrder.indexOf((a.month || "").trim());
       const monthB = monthOrder.indexOf((b.month || "").trim());
-     
       if (monthA !== monthB) return monthA - monthB;
       return (parseInt(a.day) || 0) - (parseInt(b.day) || 0);
     });
-    // Take last 6 valid entries
+    
     const last6 = sortedData.slice(-6);
-    console.log("Rendering last 6 days:", last6.map(d => `${d.month} ${d.day}`));
     let html = '';
     for (const entry of last6) {
       const dayNumber = entry.day || '';
@@ -936,40 +954,96 @@
     }
     menuGrid.innerHTML = html;
   }
-  async function fetchData() {
+  
+  // Load from cache first (instant display)
+  function loadFromCache() {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    const cacheTime = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+    
+    if (cachedData && cacheTime) {
+      const now = Date.now();
+      if (now - parseInt(cacheTime) < CACHE_DURATION) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+            allMenuData = parsed;
+            renderLast6DaysWithMenu();
+            console.log("Loaded from cache");
+            return true;
+          }
+        } catch(e) {}
+      }
+    }
+    return false;
+  }
+  
+  // Save to cache
+  function saveToCache(data) {
     try {
-      console.log("Fetching data from Google Sheet...");
-      const response = await fetch(API_URL);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+    } catch(e) {}
+  }
+  
+  // Fetch fresh data from Google Sheets (async, non-blocking)
+  async function fetchFreshData() {
+    try {
+      console.log("Fetching fresh data from Google Sheet...");
+      // Use fetch with AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(API_URL, { signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await response.json();
-      console.log("Response received:", data);
+      
       if (data.success && data.menuData && Array.isArray(data.menuData)) {
-        allMenuData = data.menuData;
-        // Clean data
-        allMenuData.forEach(item => {
+        const newData = data.menuData;
+        newData.forEach(item => {
           if (!item.weekday) item.weekday = `Day ${item.day || ''}`;
           item.menuItem = (item.menuItem || "").toString().trim();
           item.day = parseInt(item.day, 10) || 0;
           item.month = (item.month || "").toString().trim();
         });
-        renderLast6DaysWithMenu();
-        dataLoaded = true;
+        
+        // Only update if data changed (compare length or first item)
+        const shouldUpdate = JSON.stringify(allMenuData) !== JSON.stringify(newData);
+        if (shouldUpdate || allMenuData.length === 0) {
+          allMenuData = newData;
+          saveToCache(allMenuData);
+          renderLast6DaysWithMenu();
+          console.log("Updated with fresh data");
+        } else {
+          console.log("Fresh data identical to cache");
+        }
       } else {
-        throw new Error(data.error || "Invalid response from server");
+        throw new Error(data.error || "Invalid response");
       }
     } catch (error) {
-      console.error("Fetch error:", error);
-      menuGrid.innerHTML = `<div class="no-data">
-        <i class="fas fa-cloud-download-alt fa-3x"></i><br>
-        <strong>⚠️ Sync Error</strong><br>
-        ${escapeHtml(error.message)}<br><br>
-        Please check internet or Google Sheet deployment.
-      </div>`;
-      dataLoaded = true;
+      console.warn("Background fetch failed:", error);
+      // If no cache was loaded and fetch fails, show error
+      if (allMenuData.length === 0) {
+        menuGrid.innerHTML = `<div class="no-data">
+          <i class="fas fa-cloud-download-alt fa-3x"></i><br>
+          <strong>⚠️ Connection Error</strong><br>
+          Please check your internet connection.<br><br>
+          <small>Will retry automatically...</small>
+        </div>`;
+      }
     }
   }
-  fetchData();
   
-  // ========== SHARE BUTTON (unchanged) ==========
+  // Initialize - load cache instantly, then fetch fresh in background
+  const cacheLoaded = loadFromCache();
+  if (!cacheLoaded) {
+    // Show loading state while fetching
+    menuGrid.innerHTML = `<div class="loading-placeholder"><i class="fas fa-spinner fa-pulse fa-2x"></i><br><br>Loading menu...</div>`;
+  }
+  
+  // Fetch fresh data in background (doesn't block UI)
+  fetchFreshData();
+  
+  // ========== SHARE BUTTON ==========
   async function getHighResImageBlob() {
     const captureElement = document.getElementById('captureArea');
     if (!captureElement) throw new Error("Capture area missing");
@@ -995,6 +1069,7 @@
       captureElement.style.maxWidth = originalMaxWidth || '';
     }
   }
+  
   const shareBtn = document.getElementById('shareBtn');
   shareBtn.addEventListener('click', async () => {
     try {
@@ -1026,7 +1101,6 @@
   });
 
   // ========== PWA INSTALL BUTTON + SERVICE WORKER ==========
-  // Service Worker Registration
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
@@ -1035,63 +1109,46 @@
     });
   }
 
-  // Install Prompt - for Android/Chrome
   let deferredPrompt;
   const installBtn = document.getElementById('installBtn');
 
-  // Detect iOS
   function isIOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   }
 
-  // Detect if already installed (standalone mode)
   function isInStandaloneMode() {
     return (window.matchMedia('(display-mode: standalone)').matches) || 
            ('standalone' in window.navigator && window.navigator.standalone) || 
            document.referrer.includes('android-app://');
   }
 
-  // Show/hide install button based on platform and installation status
   function handleInstallButton() {
-    // If app is already installed, hide the install button
     if (isInStandaloneMode()) {
       installBtn.style.display = 'none';
       return;
     }
-    
-    // For iOS - always show the install button (with guide)
     if (isIOS()) {
       installBtn.style.display = 'flex';
       return;
     }
-    
-    // For Android/Chrome - will be shown when beforeinstallprompt fires
-    // Keep it hidden initially
     installBtn.style.display = 'none';
   }
 
-  // Run on page load
   handleInstallButton();
 
-  // For Android/Chrome - listen for install prompt
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // Only show if not iOS (iOS doesn't fire this event anyway)
     if (!isIOS()) {
       installBtn.style.display = 'flex';
     }
   });
 
-  // Install button click handler
   installBtn.addEventListener('click', async () => {
-    // For iOS - show installation guide
     if (isIOS()) {
       document.getElementById('installGuideModal').style.display = 'flex';
       return;
     }
-    
-    // For Android/Chrome
     if (!deferredPrompt) return;
     
     installBtn.style.pointerEvents = 'none';
@@ -1100,7 +1157,6 @@
     
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log('Install outcome:', outcome);
     
     deferredPrompt = null;
     installBtn.style.display = 'none';
@@ -1108,18 +1164,13 @@
     installBtn.style.pointerEvents = 'auto';
   });
 
-  // When app is installed
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
     deferredPrompt = null;
-    console.log('PWA was installed');
   });
 
-  // Check display mode changes
   window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
-    if (evt.matches) {
-      installBtn.style.display = 'none';
-    }
+    if (evt.matches) installBtn.style.display = 'none';
   });
 </script>
 </body>
