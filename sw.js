@@ -1,44 +1,53 @@
-// sw.js — Permanent fix: HTML is NEVER cached. Always served fresh from network.
-const CACHE_NAME = 'chattogram-static-v2';
-// Only cache genuinely static assets (manifest, icons, fonts)
+// sw.js — HTML is NEVER cached. Always served fresh from network.
+// CACHE_NAME is auto-replaced on every deploy by GitHub Actions — never edit manually.
+const CACHE_NAME = 'chattogram-BUILD_HASH';
 const STATIC_ASSETS = [
   'manifest.json'
 ];
-// Install — cache only static assets, NOT index.html
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
-// Activate — wipe ALL old caches unconditionally
+
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()).then(() => {
+      // Tell every open tab to reload so they get fresh HTML immediately
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+        clients.forEach(client => client.postMessage({ type: 'SW_ACTIVATED' }));
+      });
+    })
   );
 });
-// Fetch — HTML always goes to network. Never serve index.html from cache.
+
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
-  // Always bypass cache for HTML document requests
+
+  // HTML — always fetch from network, never cache
   const isHTML = request.mode === 'navigate' ||
                  request.destination === 'document' ||
                  url.pathname === '/' ||
                  url.pathname.endsWith('.html');
   if (isHTML) {
-    // Strict network-only for HTML — cache is never touched
     event.respondWith(
-      fetch(request, { cache: 'no-store' }).catch(() => {
-        // Only fall back to cache if truly offline
-        return caches.match('index.html');
-      })
+      fetch(request, { cache: 'no-store' }).catch(() => caches.match('index.html'))
     );
     return;
   }
-  // Cache-first for static assets (manifest, icons, etc.)
+
+  // sw.js itself — always fetch fresh so new versions are never blocked
+  if (url.pathname.endsWith('sw.js')) {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
+    return;
+  }
+
+  // Static assets — cache first
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
