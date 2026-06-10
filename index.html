@@ -634,22 +634,19 @@
   // Register Service Worker — auto-reload when a new SW takes over
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      navigator.serviceWorker.register('sw.js?v=2', { updateViaCache: 'none' }).then(reg => {
         console.log('SW registered:', reg.scope);
+        reg.update();
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+            if (newWorker.state === 'activated') {
               console.log('New SW activated — reloading for fresh content');
               window.location.reload();
             }
           });
         });
       }).catch(err => console.log('SW registration failed:', err));
-
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload();
-      });
     });
   }
 
