@@ -179,7 +179,7 @@
     .micro-header {
       background: #e8dfd3;
       border-radius: 40px;
-      padding: 20px 24px; /* larger padding for bigger header */
+      padding: 20px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -194,7 +194,6 @@
       background-repeat: no-repeat;
     }
 
-    /* pseudo-element now blends at 20% (meaning image shows 80% opacity) */
     .micro-header::before {
       content: "";
       position: absolute;
@@ -202,7 +201,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(232, 223, 211, 0.2); /* only 20% overlay, so image is 80% visible */
+      background: rgba(232, 223, 211, 0.2);
       backdrop-filter: blur(1px);
       z-index: 0;
       border-radius: 40px;
@@ -217,7 +216,7 @@
     }
 
     .logo-micro {
-      width: 70px;  /* much larger logo */
+      width: 70px;
       height: 70px;
       border-radius: 20px;
       object-fit: contain;
@@ -235,26 +234,25 @@
 
     .chatt-micro {
       font-family: 'Playfair Display', serif;
-      font-size: 1.8rem; /* larger title */
+      font-size: 1.8rem;
       font-weight: 800;
-      color: #1e140c; /* darker for contrast against lighter image overlay */
+      color: #1e140c;
       text-shadow: 0 2px 5px rgba(255, 250, 240, 0.9);
       letter-spacing: 0.3px;
     }
 
     .arabic-micro {
       font-family: 'Noto Naskh Arabic', serif;
-      font-size: 0.8rem; /* slightly larger */
+      font-size: 0.8rem;
       font-weight: 600;
-      color: #3d2b18; /* deeper brown for readability */
+      color: #3d2b18;
       text-shadow: 0 1px 4px rgba(255, 245, 230, 0.9);
     }
 
-    /* INSTALL BUTTON - adjusted for darker theme */
     .install-btn {
       background: #8b6a47;
       border: none;
-      padding: 12px 22px; /* larger button */
+      padding: 12px 22px;
       border-radius: 50px;
       font-family: 'Inter', sans-serif;
       font-weight: 700;
@@ -313,7 +311,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(232, 223, 211, 0.2); /* 20% overlay, image at 80% */
+      background: rgba(232, 223, 211, 0.2);
       backdrop-filter: blur(0.6px);
       z-index: 0;
       border-radius: 28px;
@@ -323,7 +321,7 @@
       font-family: 'Playfair Display', serif;
       font-size: 1.0rem;
       font-weight: 1000;
-      color: #2f2418; /* darker brown for readability */
+      color: #2f2418;
       text-align: left;
       margin-bottom: 6px;
       position: relative;
@@ -362,7 +360,7 @@
       color: #8b5e34;
     }
 
-    /* GRID */
+    /* GRID - fixed, no outer scroll */
     .grid-2x3 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -373,7 +371,8 @@
       background: transparent;
       perspective: 1000px;
       cursor: pointer;
-      min-height: 155px;
+      min-height: 140px;
+      height: auto;
     }
 
     .flip-card-inner {
@@ -383,6 +382,7 @@
       transition: transform 0.35s ease;
       transform-style: preserve-3d;
       border-radius: 18px;
+      min-height: 140px;
     }
 
     .flip-card.flipped .flip-card-inner {
@@ -401,7 +401,10 @@
       background: #fffffffb;
       border: 1px solid #dfceb6;
       box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-      overflow: hidden;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
 
     .card-back {
@@ -409,34 +412,7 @@
       background: #fefaf4;
     }
 
-    .day-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      border-bottom: 1px solid #f0e2d2;
-      padding-bottom: 4px;
-      margin-bottom: 5px;
-      flex-wrap: wrap;
-      gap: 3px;
-    }
-
-    .day-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #b07d48;
-    }
-
-    .date-chip {
-      font-size: 0.6rem;
-      font-weight: 600;
-      background: #f0e6db;
-      padding: 2px 8px;
-      border-radius: 30px;
-      color: #7a5b3c;
-      white-space: nowrap;
-    }
-
+    /* ===== SCROLLABLE CONTENT INSIDE CARD ===== */
     .menu-text {
       font-size: 0.9rem;
       line-height: 1.35;
@@ -446,16 +422,21 @@
       word-break: break-word;
       flex: 1;
       margin: 4px 0 3px 0;
+      overflow-y: auto;
+      max-height: 100%;
+      scrollbar-width: thin;
+      padding-right: 2px;
     }
-
-    .extra-head {
-      font-family: 'Playfair Display', serif;
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: #9b6e42;
-      border-left: 2px solid #dbbc9a;
-      padding-left: 6px;
-      margin-bottom: 5px;
+    .menu-text::-webkit-scrollbar {
+      width: 3px;
+    }
+    .menu-text::-webkit-scrollbar-track {
+      background: #f0e2d2;
+      border-radius: 6px;
+    }
+    .menu-text::-webkit-scrollbar-thumb {
+      background: #c9a87c;
+      border-radius: 6px;
     }
 
     .extra-detail {
@@ -470,6 +451,58 @@
       font-weight: 500;
       color: #4f3926;
       white-space: pre-line;
+      scrollbar-width: thin;
+    }
+    .extra-detail::-webkit-scrollbar {
+      width: 3px;
+    }
+    .extra-detail::-webkit-scrollbar-track {
+      background: #f0e2d2;
+      border-radius: 6px;
+    }
+    .extra-detail::-webkit-scrollbar-thumb {
+      background: #c9a87c;
+      border-radius: 6px;
+    }
+
+    .day-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0e2d2;
+      padding-bottom: 4px;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .day-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.6rem;
+      font-weight: 1000;
+      color: #b07d48;
+    }
+
+    .date-chip {
+      font-size: 0.8rem;
+      font-weight: 800;
+      background: #f0e6db;
+      padding: 2px 8px;
+      border-radius: 30px;
+      color: #7a5b3c;
+      white-space: nowrap;
+    }
+
+    .extra-head {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #9b6e42;
+      border-left: 2px solid #dbbc9a;
+      padding-left: 6px;
+      margin-bottom: 5px;
+      flex-shrink: 0;
     }
 
     .tap-hint, .back-hint {
@@ -477,6 +510,14 @@
       color: #c7ab89;
       text-align: right;
       margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    /* ensure cards have consistent height and content area grows */
+    .card-front, .card-back {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     @media (max-width: 520px) {
@@ -542,6 +583,7 @@
       </button>
     </div>
 
+    <!-- Fixed grid (no outer scroll wrapper) -->
     <div class="grid-2x3" id="compactFlipGrid">
       <div class="loading-state" style="grid-column: span 2; background:#fff9f0; text-align:center; padding:20px;">
         <div class="mini-spin"></div>
@@ -698,7 +740,11 @@
           </div>
         </div>
       `;
-      flipCard.addEventListener('click', (e) => { e.stopPropagation(); flipCard.classList.toggle('flipped'); });
+      // Attach click event for flipping
+      flipCard.addEventListener('click', (e) => { 
+        e.stopPropagation(); 
+        flipCard.classList.toggle('flipped'); 
+      });
       container.appendChild(flipCard);
     }
   }
