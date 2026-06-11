@@ -698,111 +698,174 @@
     }));
   }
 
-  // ── SPEAK SYSTEM ─────────────────────────────────────────
-  const speakCache = {};
-  let currentUtterance = null;
-  let currentSpeakBtn  = null;
-  let currentFlipCard  = null;
+ // ── SPEAK SYSTEM ─────────────────────────────────────────
+const speakCache = {};
+let currentUtterance = null;
+let currentSpeakBtn = null;
+let currentFlipCard = null;
+let voicesReady = false;
 
-  function stopSpeaking() {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    if (currentSpeakBtn) currentSpeakBtn.classList.remove('speaking', 'loading');
-    if (currentFlipCard) currentFlipCard.classList.remove('speaking');
-    currentUtterance = currentSpeakBtn = currentFlipCard = null;
+function loadVoices() {
+  return new Promise(resolve => {
+    const voices = speechSynthesis.getVoices();
+
+    if (voices.length) {
+      voicesReady = true;
+      resolve(voices);
+      return;
+    }
+
+    const handler = () => {
+      const loaded = speechSynthesis.getVoices();
+      if (loaded.length) {
+        voicesReady = true;
+        speechSynthesis.removeEventListener('voiceschanged', handler);
+        resolve(loaded);
+      }
+    };
+
+    speechSynthesis.addEventListener('voiceschanged', handler);
+
+    setTimeout(() => {
+      speechSynthesis.removeEventListener('voiceschanged', handler);
+      resolve(speechSynthesis.getVoices());
+    }, 3000);
+  });
+}
+
+function stopSpeaking() {
+  try {
+    speechSynthesis.cancel();
+  } catch (e) {}
+
+  if (currentSpeakBtn) {
+    currentSpeakBtn.classList.remove('speaking', 'loading');
   }
 
-  async function fetchNaturalSpeech(dayText, dateText, menuText) {
-    const systemPrompt =
-      'You convert a Bengali tiffin menu (written in Roman/English letters, called Banglish) ' +
-      'into a single natural English sentence for text-to-speech. ' +
-      'Always begin with the day and date (e.g. "On Saturday, June 14th, ..."). ' +
-      'Then describe each dish warmly. ' +
-      'Output only the final sentence — no explanation, no preamble, no markdown. ' +
-      'Keep it under 50 words.';
-
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model      : 'claude-sonnet-4-20250514',
-        max_tokens : 120,
-        system     : systemPrompt,
-        messages   : [{ role: 'user', content: `Day: ${dayText}\nDate: ${dateText}\nMenu: ${menuText}` }]
-      })
-    });
-    if (!resp.ok) throw new Error('API ' + resp.status);
-    const data = await resp.json();
-    const blk  = (data.content || []).find(b => b.type === 'text');
-    return blk ? blk.text.trim() : menuText;
+  if (currentFlipCard) {
+    currentFlipCard.classList.remove('speaking');
   }
 
-  function pickBestVoice() {
-    const voices = window.speechSynthesis.getVoices();
-    const prefs  = [
-      v => /samantha|karen|moira|tessa/i.test(v.name),
-      v => /google us english/i.test(v.name),
-      v => /zira|david|mark/i.test(v.name),
-      v => v.lang === 'en-US' && !v.localService,
-      v => v.lang === 'en-US',
-      v => v.lang.startsWith('en')
-    ];
-    for (const test of prefs) { const f = voices.find(test); if (f) return f; }
-    return null;
-  }
+  currentUtterance = null;
+  currentSpeakBtn = null;
+  currentFlipCard = null;
+}
 
-  function doSpeak(text, btn, card) {
-    if (!('speechSynthesis' in window)) { alert('TTS not supported.'); return; }
-    window.speechSynthesis.cancel();
-    const utter  = new SpeechSynthesisUtterance(text);
-    utter.lang   = 'en-US';
-    utter.rate   = 0.88;
-    utter.pitch  = 1.05;
-    utter.volume = 1;
-    const voice  = pickBestVoice();
-    if (voice) utter.voice = voice;
+async function fetchNaturalSpeech(dayText, dateText, menuText) {
+  const systemPrompt =
+    'You convert a Bengali tiffin menu (written in Roman/English letters, called Banglish) ' +
+    'into a single natural English sentence for text-to-speech. ' +
+    'Always begin with the day and date (e.g. "On Saturday, June 14th, ..."). ' +
+    'Then describe each dish warmly. ' +
+    'Output only the final sentence — no explanation, no preamble, no markdown. ' +
+    'Keep it under 50 words.';
 
-    currentUtterance = utter;
-    currentSpeakBtn  = btn;
-    currentFlipCard  = card;
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 120,
+      system: systemPrompt,
+      messages: [{
+        role: 'user',
+        content:
+          `Day: ${dayText}\nDate: ${dateText}\nMenu: ${menuText}`
+      }]
+    })
+  });
 
+  if (!resp.ok) throw new Error('API ' + resp.status);
+
+  const data = await resp.json();
+  const block = (data.content || []).find(b => b.type === 'text');
+
+  return block ? block.text.trim() : menuText;
+}
+
+function pickBestVoice() {
+  const voices = speechSynthesis.getVoices();
+
+  const preferred =
+    voices.find(v => /samantha/i.test(v.name)) ||
+    voices.find(v => /google us english/i.test(v.name)) ||
+    voices.find(v => /zira/i.test(v.name)) ||
+    voices.find(v => /david/i.test(v.name)) ||
+    voices.find(v => v.lang === 'en-US') ||
+    voices.find(v => v.lang.startsWith('en'));
+
+  return preferred || null;
+}
+
+async function doSpeak(text, btn, card) {
+  await loadVoices();
+
+  speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+
+  utter.lang = 'en-US';
+  utter.rate = 0.9;
+  utter.pitch = 1;
+  utter.volume = 1;
+
+  const voice = pickBestVoice();
+  if (voice) utter.voice = voice;
+
+  currentUtterance = utter;
+  currentSpeakBtn = btn;
+  currentFlipCard = card;
+
+  btn.classList.remove('loading');
+  btn.classList.add('speaking');
+  card.classList.add('speaking');
+
+  utter.onstart = () => {
     btn.classList.remove('loading');
     btn.classList.add('speaking');
-    card.classList.add('speaking');
+  };
 
-    const nudge = setInterval(() => {
-      if (!window.speechSynthesis.speaking) { clearInterval(nudge); return; }
-      window.speechSynthesis.pause();
-      window.speechSynthesis.resume();
-    }, 5000);
-
-    utter.onend  = () => { clearInterval(nudge); stopSpeaking(); };
-    utter.onerror= () => { clearInterval(nudge); stopSpeaking(); };
-    window.speechSynthesis.speak(utter);
-  }
-
-  async function handleSpeakTap(idx, day, date, menuRaw, btn, card) {
-    if (card.classList.contains('speaking')) { stopSpeaking(); return; }
+  utter.onend = () => {
     stopSpeaking();
-    btn.classList.add('loading');
-    currentSpeakBtn = btn;
-    currentFlipCard = card;
+  };
 
-    let text;
-    try {
-      text = speakCache[idx] || (speakCache[idx] = await fetchNaturalSpeech(day, date, menuRaw));
-    } catch (e) {
-      text = `On ${day} ${date}, the menu includes: ${menuRaw.replace(/\n/g, ', ')}`;
-    }
+  utter.onerror = () => {
+    stopSpeaking();
+  };
 
-    if (!window.speechSynthesis.getVoices().length) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        doSpeak(text, btn, card);
-      };
-    } else {
-      doSpeak(text, btn, card);
-    }
+  speechSynthesis.speak(utter);
+}
+
+async function handleSpeakTap(idx, day, date, menuRaw, btn, card) {
+  if (card.classList.contains('speaking')) {
+    stopSpeaking();
+    return;
   }
+
+  stopSpeaking();
+
+  btn.classList.add('loading');
+
+  let text;
+
+  try {
+    text =
+      speakCache[idx] ||
+      (speakCache[idx] = await fetchNaturalSpeech(
+        day,
+        date,
+        menuRaw
+      ));
+  } catch (e) {
+    text =
+      `On ${day} ${date}, the menu includes: ` +
+      menuRaw.replace(/\n/g, ', ');
+  }
+
+  await doSpeak(text, btn, card);
+}
 
   // ── RENDER CARDS ─────────────────────────────────────────
   function renderCards(menuItems) {
@@ -874,7 +937,7 @@
                 <span class="speak-wave">
                   <span></span><span></span><span></span><span></span><span></span>
                 </span>
-                Read
+                Read 
               </button>
               <span class="tap-hint">Tap for details</span>
             </div>
